@@ -1,0 +1,353 @@
+
+<body>
+<!--
+/*
+	<Lutedesigner - A parametric design aid for lutes>
+    Copyright (C) 2019  Lauri Niskanen
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+-->
+
+<style>
+body{width:100%;height:100%;margin:0px;padding:0px;}
+#pagewrapper{width:100%;height:100%;margin:0px;padding:0px;overflow:hidden;}
+#designer-control-panel{
+	width: 30vw;
+	display: inline-block;
+	height: 100%;
+	overflow-y: scroll;
+}
+#designer-canvas-wrapper {
+	width: 70vw;
+	height: 100vh;
+	border-style: solid;
+	border-width: 1px;
+	background: #f9f9f9;
+	display: inline-block;
+	top: 0px;
+	position: fixed;
+	overflow: hidden;
+	box-sizing: border-box;
+}
+label {
+	display:block;
+}
+.hidehandles {display:none;}
+input[type=number]{
+    width: 5em;
+} 
+#bodyviewer{
+	position: fixed;
+	height: 100%;
+	width: 70vw;
+	right:0px;
+	top:0px;
+}
+.hidebodyviewer {display:none;}
+h4 {
+	margin: 1em 0 0 0;
+}
+</style>
+<div id="pagewrapper">
+<input id="designer-backup" type="text" style="display:none;">
+<div id="designer-control-panel" >
+<div id="usage">
+	<center><a href=".."><img src="../includes/2014logoontopopt_s.png" style="height:3em;"></a></center>
+</div>
+<div id="usage">
+	<h4>Using the Lute Designer</h4>
+	<p>Left click pans, Wheel zooms, Middle button or pressing the Wheel measures. Click "Download SVG Drawing" to save your drawing.</p>
+</div>
+<div id="Paypal">
+	<h4>Free software</h4>
+	<p>Lute Designer is free open source software licensed under <a href="https://www.gnu.org/licenses/gpl-3.0.html">GPLv3</a>. It has missing features and probably some bugs and does not work on mobile browsers. Use at your own risk. Historical accuracy of preset values is not guaranteed. If you find it useful please consider supporting the development of this software with a small donation:</p>
+	<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+<input type="hidden" name="cmd" value="_s-xclick">
+<input type="hidden" name="hosted_button_id" value="HA7CJUNMDFKFJ">
+<table>
+<tr><td><input type="hidden" name="on0" value="Support Level">Support Level</td></tr><tr><td><select name="os0">
+	<option value="Altruist Almsgiver">Altruist Almsgiver €5.00 EUR</option>
+	<option value="Benevolent Bestower">Benevolent Bestower €10.00 EUR</option>
+	<option value="Champion Contributor">Champion Contributor €20.00 EUR</option>
+</select> </td></tr>
+</table>
+<input type="hidden" name="currency_code" value="EUR">
+<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_buynow_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
+</form>
+
+</div>
+
+<div id="metaselector">
+	<!--<input type="" id="bodyshape" name="bodyshape" onclick=""></input>-->
+	<h4>Drawing options</h4>
+	
+	<label>Drawing is a
+	<select id="drawingpurpose" name="drawingpurpose" onchange="settingchange(this)">
+		<option value="concept" selected="">Concept</option>
+	</select>
+	</label>
+	
+	
+	<label title="Select instrument, all values in the editor will be overwritten.">Instrument Preset
+	<select id="instrumentpreset" name="instrumentpreset" onchange="select_instrument(this)">
+		<!-- Gets filled from instrumentpresets at startup -->
+	</select>
+	</label>
+	
+	<label><button id="bodyviewerbutton" onclick="start_bodyviewer(this);">View body in 3D</button></label>
+	
+	
+</div>
+<div id="body">
+	<!--<input type="" id="bodyshape" name="bodyshape" onclick=""></input>-->
+	<h4>Body</h4>
+	<label>Body construction method
+	<select id="bodyshapefrom" name="bodyshapefrom" onchange="changebodymethod()">
+		<option value="classical">Classical construction</option>
+		<!-- <option value="construct">Construct from path</option> -->
+		<option value="fromlist" selected>From existing lute</option>
+	</select>
+	</label>
+	
+	<!-- Construction options, originally hidden -->
+	<div id="constructionoptions" style="display:none">
+	
+	<label title="Width of the body.">Body width
+	<input id="constructionwidth" size="2" step="0.01" onchange="settingchange(this)" type="number" value="4" min="1" max="10"></label>
+	
+	<label title="Length of the body; Where side arcs meet on the center line, disregarding potential shoulder arc.">Body length
+	<input id="constructionlength" size="2" step="0.01" onchange="settingchange(this)" type="number" value="6.5" min="1" max="10"></label>
+	
+	<label title="Mensur to base body size on; Divided by 9 to obtain the length of one unit.">Construction string length 
+	<input id="constructionmensur" size="2" step="1" onchange="settingchange(this)" type="number" value="600" min="100" max="1500"></label>
+	
+	<label title="Radius of the arc that gives the shape of the lute's bottom. Larger values make the bottom flatter.">Bottom radius
+	<input id="constructionbottom" size="2" step="0.5" onchange="settingchange(this)" type="number" value="6" min="1" max="500"></label>
+	
+	<label title="Radius of the arc that gives the shape of the lute's side.">Side radius
+	<input id="constructionside" size="2" step="0.01" onchange="settingchange(this)" type="number" value="6" min="4" max="10"></label>
+	
+	<label title="Radius of the arc that connects the bottom and the side.">Connector radius
+	<input id="constructionsmall" size="2" step="0.01" onchange="settingchange(this)" type="number" value="1.333333" min="1" max="3"></label>
+	
+	<label title="Radius of shoulder arc.">Shoulder radius
+	<input id="constructionshoulder" size="2" step="0.01" onchange="settingchange(this)" type="number" value="0.0" min="0" max="10"></label>
+	
+	<label title="How much the should arc should shorten the body.">Shoulder reduction
+	<input id="constructionshoulderlength" size="2" step="0.01" onchange="settingchange(this)" type="number" value="0.0" min="0" max="3"></label>
+	
+	<label title="Later lutes were designed with a wider body, by inserting an imaginary wedge between the body shapes.">Wedge angle (degrees)
+	<input id="constructionwedge" size="2" step="0.1" onchange="settingchange(this)" type="number" value="0" min="0" max="20"></label>
+	
+	
+	<label><input id="presetoverlay" type="checkbox" onchange="settingchange(this)">Show existing lute shape overlay</label>
+	
+	
+	
+	
+	</div> <!-- End construction options -->
+	
+	
+	<!-- <label style="display:none">Constructor Type
+	<select id="constructor" name="constructor" onchange="settingchange(this)">
+		<option value="medieval">Medieval</option>
+		<option value="zwolle">Zwolle, Early</option>
+		<option value="renaissance" selected>Renaissance</option>
+		<option value="wedge">Archlute /w wedge</option>
+	</select>
+	</label> -->
+	
+	<label>Select lute
+	<select id="bodyshapefromlist" name="bodyshapefromlist" onchange="settingchange(this)">
+	
+		
+		<!-- Populated from file -->
+	</select>
+	</label>
+	
+	<label>Number of ribs
+	<input id="numberofribs" size="2" step="2" onchange="settingchange(this)" type="number" value="9" min="9" max="51"></label>
+	
+	<label title="How much bulge to apply to the body cross section at the wider end, tapers to semicircular towards the neck. Values 2...3; 2 is semicircular.">Body cross-section bulge
+	<input id="bulge" size="2" step="0.05" onchange="settingchange(this)" type="number" value="2.3" min="2" max="3"></label>
+	
+	<label>Soundboard bar divisions
+	<input id="divisions" size="2" step="1" onchange="settingchange(this)" type="number" value="9" min="7" max="12"></label>
+	
+	<label>Rib spacing style
+	<select id="ribspacing" name="ribspacing" onchange="settingchange(this)">
+		<option value="even">Evenly at edge</option>
+		<option value="evenclasp" selected>Evenly at endclasp</option>
+		<!-- <option value="above">Above edge (for deep bodies)</option> -->
+		<!-- <option value="theorbo">Whatever can be hidden under endclasp</option> -->
+	</select>
+	</label>
+	
+	<label title="How close to the center the ribs' ends are under the endclasp. Values 0...1; 0 being as close together as possible.">Rib spread at endclasp
+	<input id="ribspread" size="2" step="0.05" onchange="settingchange(this)" type="number" value="1" min="0" max="1"></label>
+	
+	<label title="Body scale">Body scale
+	<input id="bodyscale" size="2" step="0.01" onchange="settingchange(this)" type="number" value="1" min="0.1" max="3"></label>
+	
+	<label>Bridge offset (move toward neck by)
+	<input id="bridgeoffset" size="2" step="0.5" onchange="settingchange(this)" type="number" value="8"></label>
+	
+</div>
+<div id="rosette">
+	<h4>Rosette</h4>
+	<label>Select rosette type
+	<select id="rosettelist" name="rosettelist" onchange="settingchange(this)">
+		<option value="single">Single rosette</option>
+		<option value="triple">Triple rosette</option>
+		<!-- Populated from file -->
+	</select></label>
+	<label>Scale rosette by
+	<input id="rosettescale" size="2" step="1.0" onchange="settingchange(this)" type="number" value="100">percent</label>
+	
+</div>
+<div id="pegbox">
+	<h4>Pegbox</h4>
+	<label>Pegbox / Extension style
+	<select id="pegboxstyle" name="pegboxstyle" onchange="settingchange(this)">
+		<option value="renaissance" selected>Renaissance</option>
+		<option value="chanterelle">Renaissance /w chanterelle rider</option>
+		<option value="bassrider">13c Bass and Treble rider</option>
+		<option value="theorbo">Theorbo</option>
+	</select>
+	</label>
+	<label><input id="foldable" type="checkbox" onchange="settingchange(this)" checked>Foldable extension</label>
+	
+</div>
+<div id="strings">
+	<h4>Strings</h4>
+	<label>Chanterelles (single top strings)<input id="chanterelles" size="2" step="1" onchange="settingchange(this)" type="number" value="1" min="0" max="2"></label>
+	
+	<label>Number of Nuts<input id="numbernuts" size="2" step="1" onchange="makenutselectors(this);settingchange(this);" type="number" value="1" min="1" max="20"></label>
+	
+
+	<table id="nut_table">
+	
+	
+	</table>
+	<label><input id="drawallstrings" type="checkbox" onchange="settingchange(this)" checked>Draw every string</label>
+	
+	<!-- 
+	<label>Fingerboard string length
+	<input id="mensur" size="2" step="1" onchange="settingchange(this)" type="number" value="585"></label>
+	<label>Number of fingerboard courses
+	<input id="fingerboardcourses" size="2" step="1" onchange="settingchange(this)" type="number" value="7"></label>
+	<label>Of which single strings (chanterelles)
+	
+	<label><input id="singlestrings" type="checkbox" onchange="settingchange(this)">All single strings on the fingerboard</label>
+	
+	<p></p>
+	<label><input id="hasdiapasons" type="checkbox" onchange="settingchange(this)" checked>Diapasons</label>
+	<label>Bass string length
+	<input id="bassmensur" size="2" step="1" onchange="settingchange(this)" type="number" value="1200"></label>
+	<label>Number of bass courses
+	<input id="basscourses" size="2" step="1" onchange="settingchange(this)" type="number" value="0"></label>
+	<label><input id="singlebasses" type="checkbox" onchange="settingchange(this)" checked>Bass courses are single strings</label>
+	 -->
+</div>
+<div id="fingerboard">
+	<h4>Fingerboard</h4>
+	<!-- <label>Frets on neck -->
+	<!-- <input id="fretsonneck" size="2" step="0.1" onchange="settingchange(this)" type="number" value="8.4"></label> -->
+	<label>Fingerboard join style
+	<select id="fingerboardstyle" name="fingerboardstyle" onchange="settingchange(this)">
+		<option value="fangs" selected>Fangs</option>
+		<option value="flat">Flat</option>
+	</select>
+	<label>
+	<select id="limitorset" name="limitorset" onchange="settingchange(this)">
+		<option value="limit" selected>Limit</option>
+		<option value="set">Set</option>
+	</select>
+	neck width at body joint
+	<input id="neckwidthlimit" size="2" step="1" onchange="settingchange(this)" type="number" value="100">
+	</label>
+	<label>Add or substract from width at nut
+	<input id="neckadd" size="2" step="1" onchange="settingchange(this)" type="number" value="0"></label>
+</div>
+
+<div id="bridge">
+	<h4>Bridge</h4>
+	<label>String spacing preset
+	<select id="spacingpreset" name="bridgestyle" onchange="spacingpresetchange(this)">
+		<option value="renaissance" selected>Renaissance</option>
+		<option value="baroque11c">Baroque 11c</option>
+		<option value="baroque13c">Baroque 13c</option>
+		<option value="theorbosingle">Theorbo single</option>
+		<option value="archlute">Archlute</option>
+		<option value="guitar">Guitar</option>
+		
+	</select>
+	</label>
+	
+	
+	<label>Bridge style
+	<select id="bridgestyle" name="bridgestyle" onchange="settingchange(this)">
+
+		
+	</select>
+	
+	
+	<label>Distance between courses on the bridge
+	<input id="distcoursesbridge" size="2" step="0.1" onchange="settingchange(this)" type="number" value="9"></label>
+	<label>between the strings of a course
+	<input id="diststringsbridge" size="2" step="0.1" onchange="settingchange(this)" type="number" value="4.3"></label>
+	<label>between chanterelles
+	<input id="distchanterellesbridge" size="2" step="0.1" onchange="settingchange(this)" type="number" value="10"></label>
+	<label>between bass courses
+	<input id="distbasscoursesbridge" size="2" step="0.1" onchange="settingchange(this)" type="number" value="8"></label>
+	
+	
+</div>
+<div id="nut">
+	<h4>Nut</h4>
+	<label>between courses
+	<input id="distcoursesnut" size="2" step="0.1" onchange="settingchange(this)" type="number" value="5"></label>
+	<label>between chanterelles
+	<input id="distchanterellesnut" size="2" step="0.1" onchange="settingchange(this)" type="number" value="6.5"></label>
+	<label>between the strings
+	<input id="diststringsnut" size="2" step="0.1" onchange="settingchange(this)" type="number" value="2.5"></label>
+	<label>Spacing for bass (7th onwards)
+	<input id="distbasscoursesshortnut" size="2" step="0.1" onchange="settingchange(this)" type="number" value="2.5"></label>
+	<label>between bass courses
+	<input id="distbasscoursesnut" size="2" step="0.1" onchange="settingchange(this)" type="number" value="4"></label>
+</div>
+
+
+<br>
+<!-- viewBox="50,50, 100 100" --> 
+</div>
+<div id="designer-canvas-wrapper"  onwheel="zoom_editor(event)">
+<!-- <div id="designer-svgs" > -->
+
+
+	<svg id="designer-canvas" style="width:100%;height:auto;overflow: visible;" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+	</svg>
+</div>
+<!-- These svgs have to be here so that mobile browsers load them-->
+<object id="svg-bodies" data="body.svg" type="image/svg+xml" style="width:1px;height:1px; position:absolute"></object>
+<object id="svg-bridges" data="bridges.svg" type="image/svg+xml" style="width:1px;height:1px;position:absolute"></object>
+<object id="svg-theorbos" data="theorbohead.svg" type="image/svg+xml" style="width:1px;height:1px;position:absolute"></object>
+<object id="svg-general" data="general.svg" type="image/svg+xml" style="width:1px;height:1px;position:absolute"></object>
+
+<div id="bodyviewer" class="hidebodyviewer"></div>
+<!-- </div> -->
+</div>
+</body></html>
